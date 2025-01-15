@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_elremanso
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: db_elremansov2
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - elremanso_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_elremanso
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db_elremansov2
+      SPRING_DATASOURCE_USERNAME: app_user
+      SPRING_DATASOURCE_PASSWORD: app_password
+    depends_on:
+      - mysql
+    networks:
+      - elremanso_net
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mysql_data:
+
+networks:
+  elremanso_net:

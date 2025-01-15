@@ -37,6 +37,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    @ExceptionHandler(DirectoryDeletionException.class)
+    public ResponseEntity<ApiResponse<String>> handleDirectoryDeletionException(DirectoryDeletionException ex) {
+        ApiResponse<String> response = new ApiResponse<>("Error deleting product folder", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ApiResponse<String>> handleProductNotFoundException(ProductNotFoundException ex) {
         ApiResponse<String> response = new ApiResponse<>(ex.getMessage(), null);

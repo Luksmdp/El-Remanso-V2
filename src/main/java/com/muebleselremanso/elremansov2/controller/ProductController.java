@@ -43,12 +43,13 @@ public class ProductController {
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long id){
+        productService.delete(id);
         ApiResponse<String> apiResponse = new ApiResponse<>("Product removed",null);
         return ResponseEntity.ok(apiResponse);
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long id, @Valid ProductDto productDto){
+    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto){
         Product product = productService.update(productDto,id);
         ApiResponse<Product> apiResponse = new ApiResponse<>("Product updated",product);
         return ResponseEntity.ok(apiResponse);

@@ -1,9 +1,6 @@
 package com.muebleselremanso.elremansov2.service;
 
-import com.muebleselremanso.elremansov2.exception.CategoryNotFoundException;
-import com.muebleselremanso.elremansov2.exception.DirectoryCreationException;
-import com.muebleselremanso.elremansov2.exception.NoProductsFoundException;
-import com.muebleselremanso.elremansov2.exception.ProductNotFoundException;
+import com.muebleselremanso.elremansov2.exception.*;
 import com.muebleselremanso.elremansov2.model.dto.ProductDto;
 import com.muebleselremanso.elremansov2.model.entity.Category;
 import com.muebleselremanso.elremansov2.model.entity.Product;
@@ -18,10 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,6 +72,25 @@ public class ProductServiceImpl implements ProductService{
             throw new ProductNotFoundException("The product with id: " + id + " was not found");
         }
 
+        Product product = productOptional.get();
+
+        // Ruta de la carpeta que se debe eliminar
+        String folderName = String.valueOf(product.getId());
+        Path productFolderPath = Paths.get(urlBase + folderName);
+
+        // Eliminar la carpeta y su contenido
+        try {
+            // Si la carpeta no está vacía, eliminamos su contenido
+            if (Files.exists(productFolderPath)) {
+                Files.walk(productFolderPath)
+                        .sorted(Comparator.reverseOrder())  // Se elimina desde el archivo más profundo
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
+        } catch (IOException e) {
+            throw new DirectoryDeletionException("Directory could not be deleted for path: " + productFolderPath, e);
+        }
+
         productRepository.deleteById(id);
     }
 
@@ -103,20 +121,35 @@ public class ProductServiceImpl implements ProductService{
             throw new ProductNotFoundException("The product with id: "+ id + " was not found");
         }
 
-        Optional<Category> categoryOptional = categoryRepository.findById(productDto.getCategoryId());
-        if (categoryOptional.isEmpty()){
-            throw new CategoryNotFoundException("The category with id: "+productDto.getCategoryId()+ " was not found");
+        Product product = productOptional.get();
+
+        if (productDto.getCategoryId() != null) {
+            Optional<Category> categoryOptional = categoryRepository.findById(productDto.getCategoryId());
+            if (categoryOptional.isEmpty()){
+                throw new CategoryNotFoundException("The category with id: "+productDto.getCategoryId()+ " was not found");
+            }
+            Category category = categoryOptional.get();
+            product.setCategory(category);
         }
 
-        Product product = Product.builder()
-                .name(productDto.getName())
-                .description(productDto.getDescription())
-                .price(productDto.getPrice())
-                .promotionalPrice(productDto.getPromotionalPrice())
-                .visible(productDto.getVisible())
-                .category(categoryOptional.get())
-                .id(id)
-                .build();
+
+
+        if (productDto.getName() != null) {
+            product.setName(productDto.getName());
+        }
+        if (productDto.getDescription() != null) {
+            product.setDescription(productDto.getDescription());
+        }
+        if (productDto.getPrice() != null) {
+            product.setPrice(productDto.getPrice());
+        }
+        if (productDto.getPromotionalPrice() != null) {
+            product.setPromotionalPrice(productDto.getPromotionalPrice());
+        }
+        if (productDto.getVisible() != null) {
+            product.setVisible(productDto.getVisible());
+        }
+
 
         return productRepository.save(product);
     }
