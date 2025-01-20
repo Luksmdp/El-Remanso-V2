@@ -48,6 +48,7 @@ public class ProductServiceImpl implements ProductService{
                 .promotionalPrice(productDto.getPromotionalPrice())
                 .visible(productDto.getVisible())
                 .category(categoryOptional.get())
+                .activePromotion(productDto.getActivePromotion())
                 .build();
 
         product = productRepository.save(product);
@@ -148,6 +149,9 @@ public class ProductServiceImpl implements ProductService{
         }
         if (productDto.getVisible() != null) {
             product.setVisible(productDto.getVisible());
+        }
+        if (productDto.getActivePromotion() != null) {
+            product.setActivePromotion(productDto.getActivePromotion());
         }
 
 

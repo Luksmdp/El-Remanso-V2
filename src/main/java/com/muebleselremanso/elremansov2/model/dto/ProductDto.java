@@ -22,6 +22,9 @@ public class ProductDto {
     @NotNull(message = "Visible is mandatory")
     private Boolean visible;
 
+    @NotNull(message = "Active Promotion is mandatory")
+    private Boolean activePromotion;
+
     @NotNull(message = "El Id de la categoría es obligatoria")
     private Long categoryId;
 }

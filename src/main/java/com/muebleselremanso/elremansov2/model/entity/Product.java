@@ -30,6 +30,8 @@ public class Product {
     private String mainImage;
     @NotNull
     private Boolean visible;
+    @NotNull
+    private Boolean activePromotion;
 
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
