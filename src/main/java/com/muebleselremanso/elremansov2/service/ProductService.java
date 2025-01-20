@@ -21,4 +21,5 @@ public interface ProductService {
     void deleteImages(Long productId,List<String> imageNames);
     void setMainImage(Long id, String imagePath);
     Resource getImageResource(Long productId, String imageName);
+    List<Product> findByFilters(String name, Long categoryId, Double minPrice, Double maxPrice);
 }

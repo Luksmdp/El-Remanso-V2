@@ -54,4 +54,19 @@ public class ProductController {
         ApiResponse<Product> apiResponse = new ApiResponse<>("Product updated",product);
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/products/filter")
+    public ResponseEntity<ApiResponse<List<Product>>> findProductsByFilters(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
+
+        List<Product> filteredProducts = productService.findByFilters(name, categoryId, minPrice, maxPrice);
+
+        ApiResponse<List<Product>> apiResponse = new ApiResponse<>("Filtered products found", filteredProducts);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
 }

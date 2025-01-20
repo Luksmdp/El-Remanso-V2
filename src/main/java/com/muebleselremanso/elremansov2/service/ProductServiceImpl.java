@@ -155,6 +155,24 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    public List<Product> findByFilters(String name, Long categoryId, Double minPrice, Double maxPrice) {
+        if (name == null && categoryId == null && minPrice == null && maxPrice == null) {
+            return findAll();
+        }
+
+        List<Product> productList = productRepository.findByFilters(name, categoryId, minPrice, maxPrice);
+
+        if (productList.isEmpty()) {
+            throw new NoProductsFoundException("No products found with the specified filters");
+        }
+
+        return productList;
+    }
+
+
+
+
+    @Override
     public List<Product> findByCategoryAndPriceBetween(Long categoryId, Double priceMin, Double priceMax) {
         return null;
     }
