@@ -80,6 +80,34 @@ public class ProductController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/products/images/{id}")
+    public ResponseEntity<ApiResponse<List<String>>> listImages(@PathVariable Long id){
+        List<String> imagesList = productService.listImages(id);
 
+        ApiResponse<List<String>> apiResponse = new ApiResponse<>("Images listed",imagesList);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @DeleteMapping("/products/images/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteImages(
+            @PathVariable Long id,
+            @RequestParam List<String> imageNames) {
+
+        productService.deleteImages(id, imageNames);
+
+        ApiResponse<String> apiResponse = new ApiResponse<>("Images deleted successfully", null);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PutMapping("/products/images/main/{id}")
+    public ResponseEntity<ApiResponse<String>> setMainImage(
+            @PathVariable Long id,
+            @RequestParam String imageName) {
+
+        productService.setMainImage(id, imageName);
+
+        ApiResponse<String> apiResponse = new ApiResponse<>("Main image set successfully", null);
+        return ResponseEntity.ok(apiResponse);
+    }
 
 }

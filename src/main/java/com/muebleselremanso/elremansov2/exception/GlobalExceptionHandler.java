@@ -98,4 +98,16 @@ public class GlobalExceptionHandler {
         ApiResponse<String> response = new ApiResponse<>("Error uploading file", null);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+    @ExceptionHandler(FileDeletionException.class)
+    public ResponseEntity<ApiResponse<String>> handleFileDeletionException(FileDeletionException ex) {
+        ApiResponse<String> response = new ApiResponse<>("Error deleting file", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleImageNotFoundException(ImageNotFoundException ex) {
+        ApiResponse<String> response = new ApiResponse<>("Image not found", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 }

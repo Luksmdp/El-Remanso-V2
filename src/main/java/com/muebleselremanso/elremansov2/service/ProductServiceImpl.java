@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -239,18 +240,85 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public List<String> listImages(Long productId) {
-        return null;
+        // Buscar el producto por ID
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("The product with id: " + productId + " was not found");
+        }
+
+        if (productOptional.get().getImagesList().isEmpty()){
+            throw new ImageNotFoundException("The product with id: " + productId + " does not have images");
+        }
+
+        // Obtener la lista de imágenes del producto
+        Product product = productOptional.get();
+        return product.getImagesList();  // Retorna la lista de imágenes almacenada en el producto
     }
+
 
     @Override
     public void deleteImages(Long productId, List<String> imageNames) {
+        // Obtener el producto por ID
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("Product with ID " + productId + " not found.");
+        }
+        Product product = productOptional.get();
 
+        // Verificar si las imágenes que se van a eliminar existen en la lista de imágenes del producto
+        List<String> imagesToDelete = product.getImagesList();
+        List<String> imagesNotFound = imageNames.stream()
+                .filter(imageName -> !imagesToDelete.contains(imageName))
+                .collect(Collectors.toList());
+
+        // Si alguna imagen no se encuentra en la lista de imágenes, lanzamos una excepción
+        if (!imagesNotFound.isEmpty()) {
+            throw new ImageNotFoundException("The following images were not found: " + String.join(", ", imagesNotFound));
+        }
+
+        // Eliminar las imágenes de la lista
+        imagesToDelete.removeAll(imageNames);
+
+        // Actualizar el producto en la base de datos
+        productRepository.save(product);
+
+        // Eliminar los archivos de las imágenes físicas en el sistema de archivos
+        for (String imageName : imageNames) {
+            Path imagePath = Paths.get(urlBase + productId + "/" + imageName);
+            try {
+                Files.deleteIfExists(imagePath);
+            } catch (IOException e) {
+                throw new FileDeletionException("Error deleting file: " + imageName, e);
+            }
+        }
     }
+
+
+
 
     @Override
     public void setMainImage(Long id, String imagePath) {
+        // Buscar el producto por ID
+        Optional<Product> productOptional = productRepository.findById(id);
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("The product with id: " + id + " was not found");
+        }
 
+        // Obtener el producto
+        Product product = productOptional.get();
+
+        // Validar si la imagen existe en la lista de imágenes del producto
+        if (!product.getImagesList().contains(imagePath)) {
+            throw new IllegalArgumentException("The image does not exist in the product's images list");
+        }
+
+        // Establecer la imagen principal
+        product.setMainImage(imagePath);
+
+        // Guardar el producto actualizado
+        productRepository.save(product);
     }
+
 
     @Override
     public Resource getImageResource(Long productId, String imageName) {
