@@ -15,8 +15,7 @@ public interface ProductService {
     List<Product> findAll();
     Product findById(Long id);
     Product update(ProductDto productDto,Long id);
-    List<Product> findByCategoryAndPriceBetween(Long categoryId, Double priceMin, Double priceMax);
-    void uploadImages(Long id, MultipartFile[] files);
+    List<String> uploadImages(Long id, MultipartFile[] files);
     List<String> listImages(Long productId);
     void deleteImages(Long productId,List<String> imageNames);
     void setMainImage(Long id, String imagePath);

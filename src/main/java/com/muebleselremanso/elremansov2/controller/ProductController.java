@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -67,6 +68,18 @@ public class ProductController {
         ApiResponse<List<Product>> apiResponse = new ApiResponse<>("Filtered products found", filteredProducts);
         return ResponseEntity.ok(apiResponse);
     }
+
+    @PostMapping("/products/images/{id}")
+    public ResponseEntity<ApiResponse<List<String>>> uploadImages(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) {
+
+        List<String> filesList = productService.uploadImages(id, files);
+
+        ApiResponse<List<String>> apiResponse = new ApiResponse<>("Images uploaded", filesList);
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
 
 }

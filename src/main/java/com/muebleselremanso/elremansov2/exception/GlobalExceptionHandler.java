@@ -86,4 +86,16 @@ public class GlobalExceptionHandler {
         ApiResponse<String> response = new ApiResponse<>("An unexpected error occurred: " + ex.getMessage(), null);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+    @ExceptionHandler(InvalidFileFormatException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidFileFormatException(InvalidFileFormatException ex) {
+        ApiResponse<String> response = new ApiResponse<>("Invalid file format", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ApiResponse<String>> handleFileUploadException(FileUploadException ex) {
+        ApiResponse<String> response = new ApiResponse<>("Error uploading file", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 }

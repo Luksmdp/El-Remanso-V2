@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -173,18 +172,70 @@ public class ProductServiceImpl implements ProductService{
         return productList;
     }
 
-
-
-
     @Override
-    public List<Product> findByCategoryAndPriceBetween(Long categoryId, Double priceMin, Double priceMax) {
-        return null;
+    public List<String> uploadImages(Long id, MultipartFile[] files) {
+        // Verifica que el producto existe
+        Optional<Product> productOptional = productRepository.findById(id);
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("The product with id: " + id + " was not found");
+        }
+
+        // Ruta de la carpeta del producto
+        String folderName = String.valueOf(id);
+        Path productFolderPath = Paths.get(urlBase + folderName);
+
+        // Crea la carpeta si no existe
+        try {
+            if (!Files.exists(productFolderPath)) {
+                Files.createDirectories(productFolderPath);
+            }
+        } catch (IOException e) {
+            throw new DirectoryCreationException("Directory could not be created for path: " + productFolderPath, e);
+        }
+
+        // Lista para almacenar los nombres de los archivos subidos
+        List<String> uploadedFileNames = new ArrayList<>();
+
+        // Procesa cada archivo
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                throw new IllegalArgumentException("One of the files is empty.");
+            }
+
+            // Valida el formato del archivo
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || !originalFilename.matches(".*\\.(jpg|jpeg|png)$")) {
+                throw new InvalidFileFormatException("Invalid file format for file: " + originalFilename);
+            }
+
+            // Genera un nuevo nombre de archivo si hay conflicto
+            String uniqueFilename = originalFilename + "_" + UUID.randomUUID().toString();
+
+            // Define la ruta del archivo
+            Path filePath = productFolderPath.resolve(uniqueFilename);
+
+            try {
+                // Guarda el archivo
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                // Añade el nombre del archivo a la lista
+                uploadedFileNames.add(uniqueFilename);
+
+                // Actualiza la lista de imágenes del producto
+                Product product = productOptional.get();
+                product.getImagesList().add(uniqueFilename);
+                productRepository.save(product);
+            } catch (IOException e) {
+                throw new FileUploadException("Error uploading file: " + originalFilename, e);
+            }
+        }
+
+        return uploadedFileNames;
     }
 
-    @Override
-    public void uploadImages(Long id, MultipartFile[] files) {
 
-    }
+
+
 
     @Override
     public List<String> listImages(Long productId) {
