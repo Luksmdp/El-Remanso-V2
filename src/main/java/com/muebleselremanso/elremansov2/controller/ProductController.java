@@ -15,48 +15,48 @@ import java.util.List;
 
 @RestController
 @Slf4j
-@RequestMapping("/api/v2")
+@RequestMapping("/api/v2/products")
 @RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/products")
+    @GetMapping("")
     public ResponseEntity<ApiResponse<List<Product>>> findAllProducts(){
         List<Product> productList = productService.findAll();
         ApiResponse<List<Product>> apiResponse = new ApiResponse<>("Products found",productList);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/products")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<Product>> saveProduct(@Valid @RequestBody ProductDto productDto){
         Product productSaved = productService.save(productDto);
         ApiResponse<Product> apiResponse = new ApiResponse<>("Product saved",productSaved);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/products/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Product>> findProductById(@PathVariable Long id){
         Product product = productService.findById(id);
         ApiResponse<Product> apiResponse = new ApiResponse<>("Product found",product);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/products/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long id){
         productService.delete(id);
         ApiResponse<String> apiResponse = new ApiResponse<>("Product removed",null);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/products/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto){
         Product product = productService.update(productDto,id);
         ApiResponse<Product> apiResponse = new ApiResponse<>("Product updated",product);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/products/filter")
+    @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<Product>>> findProductsByFilters(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long categoryId,
@@ -69,7 +69,7 @@ public class ProductController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/products/images/{id}")
+    @PostMapping("/images/{id}")
     public ResponseEntity<ApiResponse<List<String>>> uploadImages(
             @PathVariable Long id,
             @RequestParam("files") MultipartFile[] files) {
@@ -80,7 +80,7 @@ public class ProductController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/products/images/{id}")
+    @GetMapping("/images/{id}")
     public ResponseEntity<ApiResponse<List<String>>> listImages(@PathVariable Long id){
         List<String> imagesList = productService.listImages(id);
 
@@ -88,7 +88,7 @@ public class ProductController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/products/images/{id}")
+    @DeleteMapping("/images/{id}")
     public ResponseEntity<ApiResponse<String>> deleteImages(
             @PathVariable Long id,
             @RequestParam List<String> imageNames) {
@@ -99,7 +99,7 @@ public class ProductController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/products/images/main/{id}")
+    @PutMapping("/images/main/{id}")
     public ResponseEntity<ApiResponse<String>> setMainImage(
             @PathVariable Long id,
             @RequestParam String imageName) {

@@ -16,41 +16,41 @@ import java.util.List;
 
 @RestController
 @Slf4j
-@RequestMapping("/api/v2")
+@RequestMapping("/api/v2/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @GetMapping("/categories")
+    @GetMapping("")
     public ResponseEntity<ApiResponse<List<Category>>> findAllCategories(){
         List<Category> categoryList = categoryService.findAll();
         ApiResponse<List<Category>> apiResponse = new ApiResponse<>("Categories Found",categoryList);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/categories/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Category>> findCategoryById(@PathVariable Long id){
         Category category = categoryService.findById(id);
         ApiResponse<Category> apiResponse = new ApiResponse<>("Category Found",category);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/categories")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<Category>> saveCategory(@Valid @RequestBody CategoryDto categoryDto){
         Category category = categoryService.save(categoryDto);
         ApiResponse<Category> apiResponse = new ApiResponse<>("Category saved",category);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/categories/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteCategory(@PathVariable Long id){
         categoryService.delete(id);
         ApiResponse<String> apiResponse = new ApiResponse<>("Category removed",null);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/categories/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Category>> updateCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto){
         Category category = categoryService.update(categoryDto,id);
         ApiResponse<Category> apiResponse = new ApiResponse<>("Category updated",category);
