@@ -6,13 +6,15 @@ import com.muebleselremanso.elremansov2.model.entity.Category;
 import com.muebleselremanso.elremansov2.model.entity.Product;
 import com.muebleselremanso.elremansov2.repository.CategoryRepository;
 import com.muebleselremanso.elremansov2.repository.ProductRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -22,23 +24,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${file.upload-dir}")
     private String urlBase;
 
     @Override
+    @Transactional
+    @CachePut(value = "products", key = "'product:' + #result.id")
     public Product save(ProductDto productDto) {
         Optional<Category> categoryOptional = categoryRepository.findById(productDto.getCategoryId());
-        if (categoryOptional.isEmpty()){
-            throw new CategoryNotFoundException("The category with id: "+productDto.getCategoryId()+ " was not found");
+        if (categoryOptional.isEmpty()) {
+            throw new CategoryNotFoundException("The category with id: " + productDto.getCategoryId() + " was not found");
         }
 
         Product product = Product.builder()
@@ -60,20 +66,24 @@ public class ProductServiceImpl implements ProductService{
         try {
             Files.createDirectories(productFolderPath);
         } catch (IOException e) {
-            throw new DirectoryCreationException("Directory could not be created for path: " + productFolderPath,e);
+            throw new DirectoryCreationException("Directory could not be created for path: " + productFolderPath, e);
         }
-
+        System.out.println(product);
         return product;
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "products", key = "'product:' + #id")
     public void delete(Long id) {
         Optional<Product> productOptional = productRepository.findById(id);
-        if (productOptional.isEmpty()){
+        if (productOptional.isEmpty()) {
             throw new ProductNotFoundException("The product with id: " + id + " was not found");
         }
 
         Product product = productOptional.get();
+
+        productRepository.deleteById(id);
 
         // Ruta de la carpeta que se debe eliminar
         String folderName = String.valueOf(product.getId());
@@ -92,13 +102,13 @@ public class ProductServiceImpl implements ProductService{
             throw new DirectoryDeletionException("Directory could not be deleted for path: " + productFolderPath, e);
         }
 
-        productRepository.deleteById(id);
+
     }
 
     @Override
     public List<Product> findAll() {
         List<Product> productList = productRepository.findAll();
-        if (productList.isEmpty()){
+        if (productList.isEmpty()) {
             throw new NoProductsFoundException("No products found in the database");
         }
 
@@ -106,56 +116,50 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
+    @Cacheable(value = "products", key = "'product:' + #id")
     public Product findById(Long id) {
+
+
         Optional<Product> productOptional = productRepository.findById(id);
-        if (productOptional.isEmpty()){
-            throw new ProductNotFoundException("The product with id: "+ id + " was not found");
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("The product with id: " + id + " was not found");
         }
 
         return productOptional.get();
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "products", key = "'product:' + #id")
     public Product update(ProductDto productDto, Long id) {
         Optional<Product> productOptional = productRepository.findById(id);
-        if (productOptional.isEmpty()){
-            throw new ProductNotFoundException("The product with id: "+ id + " was not found");
+        if (productOptional.isEmpty()) {
+            throw new ProductNotFoundException("The product with id: " + id + " was not found");
         }
 
         Product product = productOptional.get();
 
         if (productDto.getCategoryId() != null) {
             Optional<Category> categoryOptional = categoryRepository.findById(productDto.getCategoryId());
-            if (categoryOptional.isEmpty()){
-                throw new CategoryNotFoundException("The category with id: "+productDto.getCategoryId()+ " was not found");
+            if (categoryOptional.isEmpty()) {
+                throw new CategoryNotFoundException("The category with id: " + productDto.getCategoryId() + " was not found");
             }
             Category category = categoryOptional.get();
             product.setCategory(category);
         }
 
-
-
-        if (productDto.getName() != null) {
-            product.setName(productDto.getName());
-        }
-        if (productDto.getDescription() != null) {
-            product.setDescription(productDto.getDescription());
-        }
-        if (productDto.getPrice() != null) {
-            product.setPrice(productDto.getPrice());
-        }
-        if (productDto.getPromotionalPrice() != null) {
-            product.setPromotionalPrice(productDto.getPromotionalPrice());
-        }
-        if (productDto.getVisible() != null) {
-            product.setVisible(productDto.getVisible());
-        }
-        if (productDto.getActivePromotion() != null) {
-            product.setActivePromotion(productDto.getActivePromotion());
-        }
-
+        updateProductFields(product, productDto);
 
         return productRepository.save(product);
+    }
+
+    private void updateProductFields(Product product, ProductDto dto) {
+        if (dto.getName() != null) product.setName(dto.getName());
+        if (dto.getDescription() != null) product.setDescription(dto.getDescription());
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getPromotionalPrice() != null) product.setPromotionalPrice(dto.getPromotionalPrice());
+        if (dto.getVisible() != null) product.setVisible(dto.getVisible());
+        if (dto.getActivePromotion() != null) product.setActivePromotion(dto.getActivePromotion());
     }
 
     @Override
@@ -210,7 +214,7 @@ public class ProductServiceImpl implements ProductService{
             }
 
             // Genera un nuevo nombre de archivo si hay conflicto
-            String uniqueFilename = originalFilename + "_" + UUID.randomUUID().toString();
+            String uniqueFilename = originalFilename + "_" + UUID.randomUUID();
 
             // Define la ruta del archivo
             Path filePath = productFolderPath.resolve(uniqueFilename);
@@ -235,9 +239,6 @@ public class ProductServiceImpl implements ProductService{
     }
 
 
-
-
-
     @Override
     public List<String> listImages(Long productId) {
         // Buscar el producto por ID
@@ -246,7 +247,7 @@ public class ProductServiceImpl implements ProductService{
             throw new ProductNotFoundException("The product with id: " + productId + " was not found");
         }
 
-        if (productOptional.get().getImagesList().isEmpty()){
+        if (productOptional.get().getImagesList().isEmpty()) {
             throw new ImageNotFoundException("The product with id: " + productId + " does not have images");
         }
 
@@ -292,8 +293,6 @@ public class ProductServiceImpl implements ProductService{
             }
         }
     }
-
-
 
 
     @Override

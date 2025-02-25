@@ -3,7 +3,6 @@ package com.muebleselremanso.elremansov2.service;
 import com.muebleselremanso.elremansov2.model.dto.ProductDto;
 import com.muebleselremanso.elremansov2.model.entity.Product;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
