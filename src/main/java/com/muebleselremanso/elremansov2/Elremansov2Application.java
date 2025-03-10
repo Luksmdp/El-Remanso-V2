@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class
+
 Elremansov2Application {
 
 	public static void main(String[] args) {
