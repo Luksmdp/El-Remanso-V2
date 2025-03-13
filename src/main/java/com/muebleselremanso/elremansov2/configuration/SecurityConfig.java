@@ -27,7 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
+                /*.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v2/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v2/carts/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v2/products/**").permitAll()
@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v2/products/**").hasRole("ADMIN")
                         .requestMatchers("/api/v2/carts/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
-                )
+                )*/
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

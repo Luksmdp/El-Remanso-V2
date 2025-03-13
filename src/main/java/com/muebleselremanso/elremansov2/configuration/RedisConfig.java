@@ -1,5 +1,6 @@
 package com.muebleselremanso.elremansov2.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -41,5 +45,19 @@ public class RedisConfig {
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(cacheConfiguration())
                 .build();
+    }
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory(
+            @Value("${spring.redis.host}") String host,
+            @Value("${spring.redis.port}") int port) {
+        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host, port);
+
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+                .commandTimeout(Duration.ofSeconds(5))
+                .shutdownTimeout(Duration.ofSeconds(2))
+                .build();
+
+        return new LettuceConnectionFactory(redisConfig, clientConfig);
     }
 }
